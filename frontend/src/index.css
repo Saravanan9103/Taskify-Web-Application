@@ -1,0 +1,46 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #121212;
+  color: white;
+}
+
+.container {
+  width: 500px;
+  margin: auto;
+  margin-top: 50px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.input-section {
+  display: flex;
+  gap: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.task-card {
+  background: #1f1f1f;
+  padding: 15px;
+  margin-top: 10px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
