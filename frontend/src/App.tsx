@@ -1,122 +1,108 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useState } from "react";
+import API from "./api";
+import { Trash2, Pencil } from "lucide-react";
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+interface Task {
+  id: number;
+  title: string;
+  completed: boolean;
 }
 
-export default App
+function App() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [title, setTitle] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  // FETCH TASKS
+  const fetchTasks = async () => {
+    const response = await API.get("/tasks/");
+    setTasks(response.data);
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  // ADD TASK
+  const addTask = async () => {
+    if (!title.trim()) return;
+
+    await API.post("/tasks/create/", {
+      title,
+      completed: false,
+    });
+
+    setTitle("");
+    fetchTasks();
+  };
+
+  // DELETE TASK
+  const deleteTask = async (id: number) => {
+    await API.delete(`/tasks/delete/${id}/`);
+    fetchTasks();
+  };
+
+  // EDIT TASK
+  const editTask = (task: Task) => {
+    setTitle(task.title);
+    setEditingId(task.id);
+  };
+
+  // UPDATE TASK
+  const updateTask = async () => {
+    await API.put(`/tasks/update/${editingId}/`, {
+      title,
+      completed: false,
+    });
+
+    setTitle("");
+    setEditingId(null);
+
+    fetchTasks();
+  };
+
+  return (
+    <div className="container">
+      <h1>Taskify</h1>
+
+      <div className="input-section">
+        <input
+          type="text"
+          placeholder="Enter task..."
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
+        {editingId ? (
+          <button onClick={updateTask}>Update</button>
+        ) : (
+          <button onClick={addTask}>Add</button>
+        )}
+      </div>
+
+      <div className="task-list">
+        {tasks.map((task) => (
+          <div key={task.id} className="task-card">
+            <p>{task.title}</p>
+
+            <div className="actions">
+              <Pencil
+                size={20}
+                cursor="pointer"
+                onClick={() => editTask(task)}
+              />
+
+              <Trash2
+                size={20}
+                cursor="pointer"
+                onClick={() => deleteTask(task.id)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default App;
